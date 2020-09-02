@@ -5,12 +5,13 @@ import nltk
 
 from tqdm import tqdm
 
-def prep_data():
-	nltk.download('brown')
-	nltk.download('universal_tagset')
+from prep_data import *
+# def prep_data():
+# 	nltk.download('brown')
+# 	nltk.download('universal_tagset')
 
-	corpus = nltk.corpus.brown.tagged_words()
-	return [(word, nltk.tag.map_tag('brown','universal',tag)) for word,tag in corpus]
+# 	corpus = nltk.corpus.brown.tagged_words()
+# 	return [(word, nltk.tag.map_tag('brown','universal',tag)) for word,tag in corpus]
 
 
 def calculate_transition_probs(data,tag_dict):
@@ -39,56 +40,27 @@ def calculate_emmision_probs(data,tag_dict,word_dict,lambda_interpolation):
 			emmision_probs[word_dict[i[0]],tag_dict[i[1]]] += 1
 	return ((1-lambda_interpolation)*emmision_probs/((emmision_probs.sum(axis=1).reshape(-1,1))+1e-10)) + lambda_interpolation/(1e+8)
 
-def preprocess(text_file_path):
-	data = prep_data()
-	# print(type(data[0]))
-	data_new = []
-	tag_dict = {}
-	word_dict = {}
-	tag_index = 0 
-	word_index = 0
-	app = []
-	for d in tqdm(data):
-		# print(type(d))
-		# if(len(d) == 0):
-		# 	continue
-		# d = "<s>_<s> "+d + " </s>_</s>"
-		# # print(d)
-		# buff = (d.split())
-	
-		new_ent = d
-		try:
-			a = word_dict[new_ent[0]]
-		except:
-			word_dict[new_ent[0]] = word_index
-			word_index+=1
-		try:
-			a = tag_dict[new_ent[1]]
-		except:
-			tag_dict[new_ent[1]] = tag_index
-			tag_index+=1
-
-		# print(new_ent)
-		app.append(new_ent)
-
-	word_dict['UNK'] = word_index   #Tag for unknown
-	return [app],word_dict,tag_dict
 
 class Probs:
-	def __init__(self,text_file_path='wiki-en-train.norm_pos'):
-		data,self.word_dict,self.tag_dict = preprocess(text_file_path)
-		self.emmision_probs = calculate_emmision_probs(data,self.tag_dict,self.word_dict,0.1)
-		self.transition_probs = calculate_transition_probs(data,self.tag_dict) 
+	def __init__(self,sents,word_dict,tag_dict,text_file_path='wiki-en-train.norm_pos'):
 
-		print(self.transition_probs)
-		# print((self.tag_dict))
+		# data,self.word_dict,self.tag_dict = preprocess(text_file_path)
+		self.emmision_probs = calculate_emmision_probs(sents,tag_dict,word_dict,0.1)
+		self.transition_probs = calculate_transition_probs(sents,tag_dict) 
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--model", help="Model file")
 	# parser.add_argument("--train-file", help="Input file to be decoded")
 	args = parser.parse_args()
-	p = Probs()
+	data = DataLoader()
+	data.preprocess_hmm()
+	word_dict,tag_dict = data.word_dict,data.tag_dict
+	for i in range(5):
+		print("Training Fold no. {}".format(i))
+		train,test = data.get_fold(i)
+		p = Probs(train,word_dict,tag_dict)
+
 	# print(p.word_dict)
 	# print(p.tag_dict,p.word_dict['.'],p.emmision_probs[31,13],p.transition_probs[0,:])
 	pickle.dump(p,open(args.model,'wb'))
