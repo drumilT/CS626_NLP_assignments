@@ -7,11 +7,11 @@ from tqdm import tqdm
 
 from prep_data import *
 # def prep_data():
-# 	nltk.download('brown')
-# 	nltk.download('universal_tagset')
+#   nltk.download('brown')
+#   nltk.download('universal_tagset')
 
-# 	corpus = nltk.corpus.brown.tagged_words()
-# 	return [(word, nltk.tag.map_tag('brown','universal',tag)) for word,tag in corpus]
+#   corpus = nltk.corpus.brown.tagged_words()
+#   return [(word, nltk.tag.map_tag('brown','universal',tag)) for word,tag in corpus]
 
 
 def calculate_transition_probs(data,tag_dict):
