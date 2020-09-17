@@ -23,7 +23,7 @@ def prep_sents():
 	corpus = nltk.corpus.brown.tagged_sents(tagset='universal')
 	#print(corpus[0])
 	return corpus
-	#return [[(word, nltk.tag.map_tag('brown','universal',tag)) for word,tag in sents] for sents in corpus]	
+	#return [[(word, nltk.tag.map_tag('brown','universal',tag)) for word,tag in sents] for sents in corpus] 
 
 
 def get_breaks(corp_len,k):
@@ -40,7 +40,7 @@ def get_glove():
 				embedding_dict[word] = vector
 
 def get_prefix_suffix(word,prefixes=prefixes,suffixes=suffixes):
-	prefix 	 = np.zeros((1,len(prefixes)))
+	prefix   = np.zeros((1,len(prefixes)))
 	suffix = np.zeros((1,len(suffixes)))
 	word = word.lower()
 	for idx,pref in enumerate(prefixes):
@@ -58,8 +58,7 @@ class DataLoader():
 		Class which will return data for k-fold validation
 		'''
 		self.corpus_sentences = prep_sents()
-		breaks = get_breaks(len(self.corpus_sentences),k)
-		self.k_folds = [self.corpus_sentences[breaks[i]:breaks[i+1]] for i in range(k)]
+		self.k = k
 
 		# return k_folds
 
@@ -87,7 +86,7 @@ class DataLoader():
 					tokens = [ str(tok) for tok in nlp(w_t[0].lower())]
 					stemmed = stemmer.stem(w_t[0])
 					tk_count = np.sum([1 for k in tokens if k in embedding_dict.keys() ])
-					vector = np.zeros(300)
+					vector = np.zeros(50)
 					if tk_count != 0:
 						vector = np.sum( [embedding_dict[tok] for tok in tokens if tok in embedding_dict.keys()], axis=0)/len(tokens)
 					elif stemmed in  embedding_dict.keys():
@@ -106,18 +105,22 @@ class DataLoader():
 
 		for sent in svm_ready_data_single:
 			new_sent = []
-			padded_sent = sent + [{"vector":np.zeros((1,300))},{"vector":np.zeros((1,300))}]
-			prev_vect = [np.zeros((1,300)),np.zeros((1,300))]
-			next_vect  = [padded_sent[1]['vector'],padded_sent[2]['vector']]
+			padded_sent = sent + [{"vector":np.zeros((1,50))},{"vector":np.zeros((1,50))}]
+			prev_vect = [np.zeros((1,50)),np.zeros((1,50))]
+			next_vect  = [padded_sent[1]['vector'].reshape((1,-1)),padded_sent[2]['vector'].reshape((1,-1))]
 			for idx in range(len(padded_sent)-2):
 				curr_word = padded_sent[idx]
 				curr_word["prev_vector"] = prev_vect 
 				curr_word["next_vector"] = next_vect 
-				prev_vect = [prev_vect[1],curr_word["vector"]]
-				next_vect  = [next_vect[1],padded_sent[idx+2]["vector"]]
+				prev_vect = [prev_vect[1],curr_word["vector"].reshape((1,-1))]
+				next_vect  = [next_vect[1],padded_sent[idx+2]["vector"].reshape((1,-1))]
+				# print([x.shape for x in [curr_word["vector"].reshape((1,-1)),curr_word["prefix"],curr_word["suffix"],curr_word["prev_vector"][0],curr_word["prev_vector"][1],curr_word["next_vector"][0],curr_word["next_vector"][1]]])
+				curr_word["features"] = np.hstack([curr_word["vector"].reshape((1,-1)),curr_word["prefix"],curr_word["suffix"],*curr_word["prev_vector"],*curr_word["next_vector"]])
 				new_sent.append(curr_word)
 			self.svm_ready_data.append(new_sent)
 		self.corpus_sentences = self.svm_ready_data
+		breaks = get_breaks(len(self.corpus_sentences),self.k)
+		self.k_folds = [self.corpus_sentences[breaks[j]:breaks[j+1]] for j in range(self.k)]
 		print("OOV count"+ str(oov_count))
 
 		
@@ -159,4 +162,5 @@ if __name__=="__main__":
 	# print(corp[:200])
 	dl = DataLoader()
 	dl.preprocess_svm()
+	print([x['features'] for x in dl.corpus_sentences[0]])
 	print(len(dl.k_folds))
