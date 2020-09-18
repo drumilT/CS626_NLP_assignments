@@ -1,4 +1,4 @@
-from SVM.base_svm import base_SVM
+from base_svm import base_SVM
 from prep_data import DataLoader
 from tqdm import tqdm
 import numpy as np
@@ -24,7 +24,7 @@ class POS_SVM():
 					assert False
 	def predict(self,data):
 		predictions = []
-		for sentence in data.corpus_sentences:
+		for sentence in data:
 			sentence_preds = []
 			for idx,tag in enumerate(tag_set):
 				train_feats = np.vstack([x['features'] for x in sentence])
@@ -33,7 +33,8 @@ class POS_SVM():
 				preds = self.svms[idx].predict(data_set)
 				sentence_preds.append(preds.reshape(-1,1))
 			sentence_preds = np.hstack(sentence_preds)
-			predictions.append(sentence_preds.argmax(axis=1))
+			predictions.append([tag_set[x] for x in sentence_preds.argmax(axis=1)])
+		# print(predictions)
 		return predictions
 
 
