@@ -2,11 +2,11 @@
 Main boilerplate file which loads dataset, trains algo and returns metrics
 '''
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-from HMM.max_Product import *
-from HMM.train import *
+# from HMM.max_Product import *
+# from HMM.train import *
 import argparse
 from prep_data import *
-from SVM.main import *
+from main import *
 
 class Solver():
 

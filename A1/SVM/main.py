@@ -9,19 +9,20 @@ class POS_SVM():
 	def __init__(self):
 		self.svms = []
 		for tag in tag_set:
-			self.svms.append(base_SVM(tag))
+			self.svms.append(base_SVM(tag,572))
 
-	def fit(self,data):
-		for sentence in tqdm(data):
-			for idx,tag in enumerate(tag_set):
-				try:
-					train_feats = np.vstack([x['features'] for x in sentence])
-					train_tags  = np.array([x['tag']==tag for x in sentence]).reshape(-1,1)*1.0
-					data_set = np.hstack([train_feats,train_tags])
-					self.svms[idx].fit(data_set)
-				except:
-					print([x['features'].shape for x in sentence])
-					assert False
+	def fit(self,data,epochs=5):
+		for epoch in range(epochs):
+			for sentence in tqdm(data):
+				for idx,tag in enumerate(tag_set):
+					try:
+						train_feats = np.vstack([x['features'] for x in sentence])
+						train_tags  = np.array([x['tag']==tag for x in sentence]).reshape(-1,1)*1.0
+						data_set = np.hstack([train_feats,train_tags])
+						self.svms[idx].fit(data_set,lr=1)
+					except:
+						print([x['features'].shape for x in sentence])
+						assert False
 	def predict(self,data):
 		predictions = []
 		for sentence in data:

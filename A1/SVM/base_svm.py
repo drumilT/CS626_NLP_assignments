@@ -4,12 +4,12 @@ import numpy as np
 #from tqdm import tqdm 
 
 class base_SVM:
-    def __init__(self,tag_name):
+    def __init__(self,tag_name, feat_size):
         print("Created SVM for tag"+tag_name)                                 
+        self.w = np.random.uniform(size=(feat_size))
+        self.b = np.random.uniform()
     
     def fit(self, data, lr=2e-5 ):
-        self.w = np.random.uniform(size=(data.shape[1]-1))
-        self.b = np.random.uniform()
         self.lr= lr
         labels = 2*data[:,-1]-1
         features = data[:,:-1]
