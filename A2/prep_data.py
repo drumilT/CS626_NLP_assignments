@@ -196,8 +196,8 @@ def prep_memm_feats(file_path):
 			curr_word["prev_pos_1"] = prev_pos[1]
 			curr_word["next_pos_0"] = next_pos[0]
 			curr_word["next_pos_1"] = next_pos[1]
-                        curr_word["3_pos"] =  " ".join([prev_pos[1] , curr_word["pos_tag"] , next_pos[0]])
-                        curr_word["5_pos"] =  " ".join(prev_pos +[ curr_word["pos_tag"] ]+ next_pos)    
+			curr_word["3_pos"] =  " ".join([prev_pos[1] , curr_word["pos_tag"] , next_pos[0]])
+			curr_word["5_pos"] =  " ".join(prev_pos +[ curr_word["pos_tag"] ]+ next_pos)    
 			curr_word["prev_chunk"] = label[idx-1] if idx >0 else "SOS"
 			
 			prev_vect = [prev_vect[1],curr_word["word"]]
