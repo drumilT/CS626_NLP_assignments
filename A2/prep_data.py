@@ -190,7 +190,7 @@ def prep_memm_feats(file_path):
 		memm_tagged_data.append(sent_labels)
 		memm_ready_data_single.append(processed_sent)
 
-	for sent,label in memm_ready_data_single,memm_tagged_data:
+	for sent,label in zip(memm_ready_data_single,memm_tagged_data):
 		#new_sent = []
 		padded_sent = sent + [{"word":"PAD", "pos_tag": "PAD"},{"word":"PAD","pos_tag": "PAD"}]
 		prev_vect = ["POS","POS"]
@@ -209,7 +209,7 @@ def prep_memm_feats(file_path):
 			curr_word["prev_pos_1"] = prev_pos[1]
 			curr_word["next_pos_0"] = next_pos[0]
 			curr_word["next_pos_1"] = next_pos[1]
-			curr_word["prev_tag"] = label[idx-1] if idx >0 else "SOS"
+			curr_word["prev_chunk"] = label[idx-1] if idx >0 else "SOS"
 			
 			prev_vect = [prev_vect[1],curr_word["word"]]
 			next_vect  = [next_vect[1],padded_sent[idx+2]["word"]]
