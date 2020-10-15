@@ -131,7 +131,7 @@ def prep_crf_feats(file_path):
 			curr_word["prev_vector_0"] = prev_vect[0] 
 			curr_word["prev_vector_1"] = prev_vect[1]
 			curr_word["next_vector_1"] = next_vect[1] 
-			curr_word["next_vector_1"] = next_vect[0]
+			curr_word["next_vector_0"] = next_vect[0]
 			curr_word["prev_pos_0"] = prev_pos[0]
 			curr_word["prev_pos_1"] = prev_pos[1]
 			curr_word["next_pos_0"] = next_pos[0]
@@ -165,8 +165,8 @@ def prep_memm_feats(file_path):
 		for w_t in sent:
 			sent_labels.append(w_t[1])
 			word_data = dict({})
-			word_data["word"]    = stemmer.stem(w_t[0].lower())
-			word_data["capital"] = any(x.upper for x in w_t[0])  
+			word_data["word"]    = w_t[0].lower()
+			#word_data["capital"] = any(x.upper for x in w_t[0])  
 				# if w_t[0].lower() not in embedding_dict.keys():
 			pref,suff = get_prefix_suffix(w_t[0])
 			# word_data["word"] = w_t[0].lower()
@@ -191,7 +191,7 @@ def prep_memm_feats(file_path):
 			curr_word["prev_vector_0"] = prev_vect[0] 
 			curr_word["prev_vector_1"] = prev_vect[1]
 			curr_word["next_vector_1"] = next_vect[1] 
-			curr_word["next_vector_1"] = next_vect[0]
+			curr_word["next_vector_0"] = next_vect[0]
 			curr_word["prev_pos_0"] = prev_pos[0]
 			curr_word["prev_pos_1"] = prev_pos[1]
 			curr_word["next_pos_0"] = next_pos[0]
