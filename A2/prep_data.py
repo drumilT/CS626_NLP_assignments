@@ -218,9 +218,9 @@ def prep_memm_feats(file_path):
 				# print([x.shape for x in [curr_word["vector"].reshape((1,-1)),curr_word["prefix"],curr_word["suffix"],curr_word["prev_vector"][0],curr_word["prev_vector"][1],curr_word["next_vector"][0],curr_word["next_vector"][1]]])
 			# curr_word["features"] = np.hstack([curr_word["vector"].reshape((1,-1)),curr_word["prefix"],curr_word["suffix"],*curr_word["prev_vector"],*curr_word["next_vector"]])
 			#new_sent.append(["{}={}".format(x,curr_word[x]) for x in curr_word.keys()])
-		memm_ready_data.append(curr_word)
+			memm_ready_data.append(curr_word)
 	corpus_sentences = memm_ready_data
-	corpus_labels    = memm_tagged_data
+	corpus_labels    = [ tag for sent_tag in memm_tagged_data for tag in sent_tag]
 	print("OOV count"+ str(oov_count))
 	return corpus_sentences, corpus_labels
 
