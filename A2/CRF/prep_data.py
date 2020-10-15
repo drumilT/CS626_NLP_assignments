@@ -29,40 +29,40 @@ def prep_sents(file_path):
 		if word[0] == ".":
 			tagged_sentences.append(sent)
 			sent = []
-	return tagged_sentences
+			return tagged_sentences
 
 
 
 
-def get_breaks(corp_len,k):
-	return [x*(corp_len//k) for x in range(k)] + [-1]
+			def get_breaks(corp_len,k):
+				return [x*(corp_len//k) for x in range(k)] + [-1]
 
 
-embedding_dict = dict({})
-def get_glove():
-	if len(embedding_dict.keys())==0:
-		with open("glove.6B.{}d.txt".format(glove_dim), 'r') as f:
-			for line in f:
-				values = line.split()
-				word = values[0]
-				vector = np.asarray(values[1:], "float32")
-				embedding_dict[word] = vector
+				embedding_dict = dict({})
+				def get_glove():
+					if len(embedding_dict.keys())==0:
+						with open("glove.6B.{}d.txt".format(glove_dim), 'r') as f:
+							for line in f:
+								values = line.split()
+								word = values[0]
+								vector = np.asarray(values[1:], "float32")
+								embedding_dict[word] = vector
 
-def get_word2vec():
-	model = gensim.models.Word2Vec(brown.sents())
-	return model
+								def get_word2vec():
+									model = gensim.models.Word2Vec(brown.sents())
+									return model
 
 def get_prefix_suffix(word,prefixes=prefixes,suffixes=suffixes):
-		prefix   = "None"
-		suffix = "None"
+		prefix   = np.zeros((1,len(prefixes)))
+		suffix = np.zeros((1,len(suffixes)))
 		word = word.lower()
 		for idx,pref in enumerate(prefixes):
 				if word.startswith(pref):
-						prefix = pref
+						prefix[0,idx] = 1.
 						break
 		for idx,suff in enumerate(suffixes):
 				if word.endswith(pref):
-						suffix = suff
+						suffix[0,idx] = 1.
 						break
 		return prefix,suffix
 
@@ -85,7 +85,6 @@ def prep_crf_feats(file_path):
 	crf_ready_data   = []
 	crf_tagged_data  = []
 	corpus_sentences = prep_sents(file_path)
-	print(len(corpus_sentences))
 	oov_count = 0
 	for sent in corpus_sentences:
 		processed_sent = []
@@ -121,9 +120,9 @@ def prep_crf_feats(file_path):
 	for sent in crf_ready_data_single:
 		new_sent = []
 		padded_sent = sent + [{"word":"PAD", "pos_tag": "PAD"},{"word":"PAD","pos_tag": "PAD"}]
-		prev_vect = ["POS","POS"]
+		prev_vect = [np.zeros((1,glove_dim)),np.zeros((1,glove_dim))]
 		# print(padded_sent)
-		next_vect  = [padded_sent[1]['word'],padded_sent[2]['word']]
+		next_vect  = [padded_sent[1]['word'].reshape((1,-1)),padded_sent[2]['word'].reshape((1,-1))]
 		prev_pos = ["PAD","PAD"]
 		next_pos = [padded_sent[1]["pos_tag"],padded_sent[2]["pos_tag"]]
 		for idx in range(len(padded_sent)-2):
@@ -143,7 +142,7 @@ def prep_crf_feats(file_path):
 			next_pos  = [next_pos[1],padded_sent[idx+2]["pos_tag"]]
 				# print([x.shape for x in [curr_word["vector"].reshape((1,-1)),curr_word["prefix"],curr_word["suffix"],curr_word["prev_vector"][0],curr_word["prev_vector"][1],curr_word["next_vector"][0],curr_word["next_vector"][1]]])
 			# curr_word["features"] = np.hstack([curr_word["vector"].reshape((1,-1)),curr_word["prefix"],curr_word["suffix"],*curr_word["prev_vector"],*curr_word["next_vector"]])
-			new_sent.append(["{}={}".format(x,curr_word[x]) for x in curr_word.keys()])
+			new_sent.append(curr_word)
 		crf_ready_data.append(new_sent)
 	corpus_sentences = crf_ready_data
 	corpus_labels    = crf_tagged_data
@@ -152,5 +151,5 @@ def prep_crf_feats(file_path):
 
 
 if __name__ == '__main__':
-	ts,tl = prep_crf_feats('../assignment2dataset/train.txt')
+	ts,tl = prep_crf_feats('assignment2dataset/train.txt')
 	print(ts[0],tl[0])
