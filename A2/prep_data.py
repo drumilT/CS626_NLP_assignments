@@ -165,27 +165,14 @@ def prep_memm_feats(file_path):
 		for w_t in sent:
 			sent_labels.append(w_t[1])
 			word_data = dict({})
-			word_data["word"]    = w_t[0] .lower()
+			word_data["word"]    = stemmer.stem(w_t[0].lower())
 			word_data["capital"] = any(x.upper for x in w_t[0])  
 				# if w_t[0].lower() not in embedding_dict.keys():
-			if w_t[0].lower() not in embedding_dict.keys():
-				tokens = [ str(tok) for tok in nlp(w_t[0].lower())]
-				stemmed = stemmer.stem(w_t[0])
-				tk_count = np.sum([1 for k in tokens if k in embedding_dict.keys() ])
-				vector = np.zeros(glove_dim)
-				if tk_count != 0:
-					vector = np.sum( [embedding_dict[tok] for tok in tokens if tok in embedding_dict.keys()], axis=0)/len(tokens)
-				elif stemmed in  embedding_dict.keys():
-					vector = embedding_dict[stemmed]
-					if np.all( vector) ==0:
-						oov_count += 1
-			else:
-				vector = embedding_dict[w_t[0].lower()]
 			pref,suff = get_prefix_suffix(w_t[0])
 			# word_data["word"] = w_t[0].lower()
 			word_data["pos_tag"] = w_t[2]
-			word_data["prefix"] = pref 
-			word_data["suffix"] = suff
+			#word_data["prefix"] = pref 
+			#word_data["suffix"] = suff
 			processed_sent.append(word_data)
 		memm_tagged_data.append(sent_labels)
 		memm_ready_data_single.append(processed_sent)
@@ -209,14 +196,16 @@ def prep_memm_feats(file_path):
 			curr_word["prev_pos_1"] = prev_pos[1]
 			curr_word["next_pos_0"] = next_pos[0]
 			curr_word["next_pos_1"] = next_pos[1]
+                        curr_word["3_pos"] =  " ".join([prev_pos[1] , curr_word["pos_tag"] , next_pos[0]])
+                        curr_word["5_pos"] =  " ".join(prev_pos +[ curr_word["pos_tag"] ]+ next_pos)    
 			curr_word["prev_chunk"] = label[idx-1] if idx >0 else "SOS"
 			
 			prev_vect = [prev_vect[1],curr_word["word"]]
 			next_vect  = [next_vect[1],padded_sent[idx+2]["word"]]
 			prev_pos = [prev_pos[1],curr_word["pos_tag"]]
 			next_pos  = [next_pos[1],padded_sent[idx+2]["pos_tag"]]
-				# print([x.shape for x in [curr_word["vector"].reshape((1,-1)),curr_word["prefix"],curr_word["suffix"],curr_word["prev_vector"][0],curr_word["prev_vector"][1],curr_word["next_vector"][0],curr_word["next_vector"][1]]])
-			# curr_word["features"] = np.hstack([curr_word["vector"].reshape((1,-1)),curr_word["prefix"],curr_word["suffix"],*curr_word["prev_vector"],*curr_word["next_vector"]])
+
+
 			#new_sent.append(["{}={}".format(x,curr_word[x]) for x in curr_word.keys()])
 			memm_ready_data.append(curr_word)
 	corpus_sentences = memm_ready_data
