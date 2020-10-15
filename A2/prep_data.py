@@ -150,6 +150,79 @@ def prep_crf_feats(file_path):
 	print("OOV count"+ str(oov_count))
 	return corpus_sentences, corpus_labels
 
+def prep_memm_feats(file_path):
+	get_glove() 
+# embedding_dict = get_word2vec()
+	memm_ready_data_single = []
+	memm_ready_data   = []
+	memm_tagged_data  = []
+	corpus_sentences = prep_sents(file_path)
+	print(len(corpus_sentences))
+	oov_count = 0
+	for sent in corpus_sentences:
+		processed_sent = []
+		sent_labels    = []
+		for w_t in sent:
+			sent_labels.append(w_t[1])
+			word_data = dict({})
+			word_data["word"]    = w_t[0] .lower()
+			word_data["capital"] = any(x.upper for x in w_t[0])  
+				# if w_t[0].lower() not in embedding_dict.keys():
+			if w_t[0].lower() not in embedding_dict.keys():
+				tokens = [ str(tok) for tok in nlp(w_t[0].lower())]
+				stemmed = stemmer.stem(w_t[0])
+				tk_count = np.sum([1 for k in tokens if k in embedding_dict.keys() ])
+				vector = np.zeros(glove_dim)
+				if tk_count != 0:
+					vector = np.sum( [embedding_dict[tok] for tok in tokens if tok in embedding_dict.keys()], axis=0)/len(tokens)
+				elif stemmed in  embedding_dict.keys():
+					vector = embedding_dict[stemmed]
+					if np.all( vector) ==0:
+						oov_count += 1
+			else:
+				vector = embedding_dict[w_t[0].lower()]
+			pref,suff = get_prefix_suffix(w_t[0])
+			# word_data["word"] = w_t[0].lower()
+			word_data["pos_tag"] = w_t[2]
+			word_data["prefix"] = pref 
+			word_data["suffix"] = suff
+			processed_sent.append(word_data)
+		memm_tagged_data.append(sent_labels)
+		memm_ready_data_single.append(processed_sent)
+
+	for sent,label in memm_ready_data_single,memm_tagged_data:
+		#new_sent = []
+		padded_sent = sent + [{"word":"PAD", "pos_tag": "PAD"},{"word":"PAD","pos_tag": "PAD"}]
+		prev_vect = ["POS","POS"]
+		# print(padded_sent)
+		next_vect  = [padded_sent[1]['word'],padded_sent[2]['word']]
+		prev_pos = ["PAD","PAD"]
+		next_pos = [padded_sent[1]["pos_tag"],padded_sent[2]["pos_tag"]]
+		
+		for idx in range(len(padded_sent)-2):
+			curr_word = padded_sent[idx]
+			curr_word["prev_vector_0"] = prev_vect[0] 
+			curr_word["prev_vector_1"] = prev_vect[1]
+			curr_word["next_vector_1"] = next_vect[1] 
+			curr_word["next_vector_1"] = next_vect[0]
+			curr_word["prev_pos_0"] = prev_pos[0]
+			curr_word["prev_pos_1"] = prev_pos[1]
+			curr_word["next_pos_0"] = next_pos[0]
+			curr_word["next_pos_1"] = next_pos[1]
+			curr_word["prev_tag"] = label[idx-1] if idx >0 else "SOS"
+			
+			prev_vect = [prev_vect[1],curr_word["word"]]
+			next_vect  = [next_vect[1],padded_sent[idx+2]["word"]]
+			prev_pos = [prev_pos[1],curr_word["pos_tag"]]
+			next_pos  = [next_pos[1],padded_sent[idx+2]["pos_tag"]]
+				# print([x.shape for x in [curr_word["vector"].reshape((1,-1)),curr_word["prefix"],curr_word["suffix"],curr_word["prev_vector"][0],curr_word["prev_vector"][1],curr_word["next_vector"][0],curr_word["next_vector"][1]]])
+			# curr_word["features"] = np.hstack([curr_word["vector"].reshape((1,-1)),curr_word["prefix"],curr_word["suffix"],*curr_word["prev_vector"],*curr_word["next_vector"]])
+			#new_sent.append(["{}={}".format(x,curr_word[x]) for x in curr_word.keys()])
+		memm_ready_data.append(curr_word)
+	corpus_sentences = memm_ready_data
+	corpus_labels    = memm_tagged_data
+	print("OOV count"+ str(oov_count))
+	return corpus_sentences, corpus_labels
 
 if __name__ == '__main__':
 	ts,tl = prep_crf_feats('../assignment2dataset/train.txt')
