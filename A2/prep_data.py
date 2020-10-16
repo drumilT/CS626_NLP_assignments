@@ -151,13 +151,10 @@ def prep_crf_feats(file_path):
 	return corpus_sentences, corpus_labels
 
 def prep_memm_feats(file_path):
-	get_glove() 
-# embedding_dict = get_word2vec()
 	memm_ready_data_single = []
 	memm_ready_data   = []
 	memm_tagged_data  = []
 	corpus_sentences = prep_sents(file_path)
-	print(len(corpus_sentences))
 	oov_count = 0
 	for sent in corpus_sentences:
 		processed_sent = []
@@ -168,7 +165,7 @@ def prep_memm_feats(file_path):
 			word_data["word"]    = w_t[0].lower()
 			#word_data["capital"] = any(x.upper for x in w_t[0])  
 				# if w_t[0].lower() not in embedding_dict.keys():
-			pref,suff = get_prefix_suffix(w_t[0])
+			#pref,suff = get_prefix_suffix(w_t[0])
 			# word_data["word"] = w_t[0].lower()
 			word_data["pos_tag"] = w_t[2]
 			#word_data["prefix"] = pref 
